@@ -18,8 +18,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { signUpSchema } from "../_schema/sign-up";
+import { signUpSchema } from "@/app/auth/_schema/sign-up";
 import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
+import { redirect } from "next/navigation";
+import { sign_up, SignUpResult } from "./action";
 
 export const SignUpForm = () => {
   const form = useForm<z.infer<typeof signUpSchema>>({
@@ -34,9 +37,22 @@ export const SignUpForm = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const { setError } = form;
 
   async function onSubmit(values: z.infer<typeof signUpSchema>) {
     console.log(values);
+
+    setLoading(true);
+    const { where, message }: SignUpResult = await sign_up(values);
+    setLoading(false);
+
+    if (where === "email") setError(where, { type: "deps", message });
+    else if (where === "Database" || where === "Server")
+      toast({
+        title: where,
+        description: message,
+      });
+    else redirect("/");
   }
 
   return (

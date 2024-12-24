@@ -19,11 +19,13 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 
-import { logInSchema } from "../_schema/log-in";
+import { logInSchema } from "@/app/auth/_schema/log-in";
 import { useState } from "react";
+import { log_in, LogInResult } from "./actions";
+import { toast } from "@/hooks/use-toast";
+import { redirect } from "next/navigation";
 
 export const LogInForm = () => {
-  const [loading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof logInSchema>>({
     resolver: zodResolver(logInSchema),
     defaultValues: {
@@ -32,8 +34,23 @@ export const LogInForm = () => {
     },
   });
 
+  const [loading, setLoading] = useState(false);
+  const { setError } = form;
+
   async function onSubmit(values: z.infer<typeof logInSchema>) {
     console.log(values);
+    setLoading(true);
+    const { where, message }: LogInResult = await log_in(values);
+    setLoading(false);
+
+    if (where === "password" || where === "email")
+      setError(where, { type: "deps", message });
+    else if (where === "Database" || where === "Server")
+      toast({
+        title: where,
+        description: message,
+      });
+    else redirect("/");
   }
 
   return (
