@@ -52,7 +52,7 @@ export const SignUpForm = () => {
         title: where,
         description: message,
       });
-    else redirect("/");
+    else redirect("/account");
   }
 
   return (
